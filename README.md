@@ -1,4 +1,4 @@
-## 👉[기능 구현](https://drive.google.com/file/d/1YPw7jPPbTi47kI8jb2GwZqTD5SyeMoS6/view?usp=sharing)<br>
+## 👉[기능 구현 및 프로젝트 소개](https://drive.google.com/file/d/1YPw7jPPbTi47kI8jb2GwZqTD5SyeMoS6/view?usp=sharing)<br>
 # 1. 아이템 선정
 먹방, K-FOOD등 식(食)문화에 관심이 많은 현 시대, 먹는 것에 진심인 우리 조원들은 종로3가에 반복되지 않은 매일 다른 식당들을 찾아다니며 맛집들을 찾아 다녔다.
 그러다가 각자 개인이 가지고 있는 맛집 LIST들을 게시판을 통하여 정리하고 공유하는 사이트를 구현하면 좋을 것 같다는 아이디어와 함께 웹사이트를 구현해 보았다.
