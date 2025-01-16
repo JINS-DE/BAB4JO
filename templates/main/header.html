@@ -1,0 +1,177 @@
+{% extends 'main/base.html' %}
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{% static 'css/style.css' %}?after" type="text/css">
+    <link rel="stylesheet" type="text/css" href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700|Roboto+Slab:400,700|Material+Icons">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700|Material+Ic">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.6.0/font/bootstrap-icons.css" />
+    <link href="//maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" rel="stylesheet" id="bootstrap-css">
+</head>
+{% block header %}
+
+<style>
+
+    .main_profile {
+        width: 40px;
+        height: 40px;
+        border-radius: 20px;
+        position: absolute;
+        z-index: 2;
+        top: 25px;
+        right: -100px;
+    }
+
+    .header_logo {
+        height: 100px;
+        width: 100px;
+        position: absolute;
+        color:rgb(246, 197, 113);
+        font-family:Impact, Haettenschweiler, 'Arial Narrow Bold', sans-serif;
+        font-size: x-large;
+        z-index: 1500;
+        padding-top: 15px;
+        left: 530px;
+    }
+
+    .main_header {
+        width: 100%;
+        height: 100px;
+        margin: 0px auto;
+        z-index: 1000;
+    }
+
+    .cover {
+        width: 100%;
+        height: 100px;
+        position: absolute;
+        background-color: white;
+        opacity: 60%;
+        z-index: -1;
+    }
+
+    ul {
+        width: 700px;
+        right: 150px;
+        padding-top: 30px;
+        position: absolute;
+        z-index: 1;
+    }
+
+    ul a {
+        margin-left: 50px;
+        text-align: center;
+        font-size: large;
+        color: #999;
+    }
+
+    ul a:hover {
+        color: gray;
+        border-bottom: 3px solid orange;
+        padding-bottom: 5px;
+        transition: all 0.25s;
+    }
+
+    ul a:link {
+        color:#999;
+    }
+
+    ul a:visited {
+        color: #999;
+    }
+
+    .header_search {
+        height: 50px;
+        width: 400px;
+        border-radius: 15px;
+        left: 770px;
+        padding-top: 30px;
+        position: absolute;
+        z-index: 0;
+    }
+    #h_search {
+        height: 40px;
+        width: 300px;
+        font-size: medium;
+        border-radius: 5px;
+        border-color: orange;
+    }
+    #h_button {
+        height: 40px;
+        width: 40px;
+        font-size: large;
+        background-color: orange;
+        border-radius: 5px;
+        border-color: orange;
+    }
+</style>
+
+<div class="main_header">
+    <div class="cover"></div>
+    <div class="header_logo" align="center">Beautiful<br>Soup</div>
+    {% if '/board' in request.path %}
+    <div class="header_search" align="right">
+        <form method="POST" action="{% url 'b_search' %}">
+            {% csrf_token %}
+        <input type="text" id="h_search" name="search" placeholder="  '검색'" />
+        <button type="submit" id="h_button"><img src="{% static 'image/DONOTDELETE_DY/glasss.png' %}"></button><br>
+        <label id="label"></label>
+        </form>
+    </div>
+    {% endif %}
+    <ul align="right">
+        <a href="/">HOME</a>
+        {% if '/board' in request.path %}
+        <a style="color:orange" href="{% url 'b_list' %}">게시판</a>
+        {% else %}
+        <a href="{% url 'b_list' %}">게시판</a>
+        {% endif %}
+        {% if user.is_active %}
+        {% if user.username == 'admin' %}
+        <a href="{% url 'm_info' user.id %}">마이페이지</a>
+        <a href="{% url 'm_membership' %}">회원정보</a>
+        <a href="{% url 'm_logout' %}">로그아웃</a>
+        <img class="main_profile" src="{% url 'm_download' 'nan' %}">
+        {% else %}
+        <a href="{% url 'm_info' user.id %}">마이페이지</a>
+        <a href="{% url 'm_logout' %}">로그아웃</a>
+        <span id="test_1"></span>
+        {% endif %}
+        {% else %}
+        <a href="{% url 'm_login' %}">로그인</a>
+        {% endif %}
+    </ul>
+</div>
+
+<script src="{% static 'js/script.js' %}"></script>
+<script src="{% static 'js/img_view.js' %}"></script>
+<script src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
+<script src="//t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js"></script>
+<script src="http://code.jquery.com/jquery-latest.min.js"></script>
+
+<script>
+$(function(){ //함수를 바로 실행시킴
+    let profile_image = " " // 프로필 이미지 공백넣음
+    console.log("실행") // 실행 확인
+    $.ajax({ // ajax실행
+        url: "{% url 'main_header' %}", // 해당 url로 전송
+        type: "get", 
+        success: function(profile){ // rest_views에서 보낸 info["profile"]
+            console.log("성공") 
+            console.log(profile) //profile 파일 풀네임
+            profile_image += "<img class='main_profile' src=/static/image/"+profile+'>' //주소를 작성
+            console.log(profile_image)
+            $("#test_1").html(profile_image) // 작성된 html주소를 해당 id에 보내줌,  주소내에 있는 클래스의 css까지도 적용됨.
+        },error: function(){
+            console.log("error")
+        }
+    })
+})
+</script>
+</html>
+{% endblock header %}

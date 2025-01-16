@@ -1,0 +1,236 @@
+{% load static %}
+
+<link href="//maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" rel="stylesheet" id="bootstrap-css">
+
+
+<style>
+    .header_logo {
+        height: 100px;
+        width: 100px;
+        position: absolute;
+        color:rgb(255, 221, 134);
+        font-family:Impact, Haettenschweiler, 'Arial Narrow Bold', sans-serif;
+        font-size: x-large;
+        z-index: 1500;
+        padding-top: 15px;
+        left: 530px;
+    }
+
+    .main_shade{
+        background-color: black;
+        opacity: 30%;
+        position: absolute;
+        z-index: 1;
+        height: 230%;
+        width: 100%;
+    }
+
+    .main_header {
+        width: 100%;
+        height: 100px;
+        margin: 0px auto;
+        z-index: 1000;
+        position: absolute;
+    }
+
+    .cover {
+        width: 100%;
+        height: 100px;
+        position: absolute;
+        background-color: black;
+        opacity: 60%;
+        z-index: -1;
+    }
+
+    ul {
+        width: 700px;
+        right: 150px;
+        padding-top: 30px;
+        position: absolute;
+        z-index: 1;
+    }
+
+    ul a {
+        margin-left: 50px;
+        text-align: center;
+        font-size: large;
+        color: white;
+    }
+
+    ul a:hover {
+        color: white;
+        border-bottom: 3px solid orange;
+        padding-bottom: 5px;
+        transition: all 0.25s;
+    }
+
+    ul a:link {
+        color:white
+    }
+
+    ul a:visited {
+        color: white;
+    }
+
+    .header_search {
+        height: 50px;
+        width: 400px;
+        border-radius: 15px;
+        left: 350px;
+        padding-top: 30px;
+        position: absolute;
+        z-index: 0;
+    }
+    #h_search {
+        height: 40px;
+        width: 250px;
+        font-size: medium;
+        border-radius: 5px;
+        border-color: orangered;
+    }
+    #h_button {
+        height: 40px;
+        width: 40px;
+        font-size: large;
+        background-color: orangered;
+        border-radius: 5px;
+        border-color: orangered;
+    }
+
+    .regi{
+        width: 100%;
+        height: 230%;
+        position: absolute;
+        background-image: url(https://images.unsplash.com/photo-1586511934875-5c5411eebf79?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=987&q=80);
+        background-repeat: no-repeat;
+        background-size: 100% 120%
+    }
+    
+    .textbox {
+        width: 300px;
+        font-size: medium;
+        height: 30px;
+    }
+
+    .fontleft {
+        text-align: left;
+    }
+
+    .form {
+        width: 300px;
+        align-items: center;
+
+    }
+
+    .form-label {
+        font-size: medium;
+    }
+
+    .card {
+        width: 400px;
+        left: 40%;
+        z-index: 10;
+        border-radius: 15px;
+        top: 200px;
+    }
+
+</style>
+
+<div class="main_shade"></div>
+<div class="main_header">
+    <div class="cover"></div>
+    <div class="header_logo" align="center">Beautiful<br>Soup</div>
+    <ul align="right">
+        <a href="/">HOME</a>
+        <a href="{% url 'b_list' %}">게시판</a>
+        {% if user.is_active %}
+        {% if user.username == 'admin' %}
+        <a href="{% url 'm_info' user.id %}">마이페이지</a>
+        <a href="{% url 'm_membership' %}">회원정보</a>
+        <a href="{% url 'm_logout' %}">로그아웃</a>
+        <img class="main_profile" src="{% url 'm_download' 'nan' %}">
+        {% else %}
+        <a href="{% url 'm_info' user.id %}">마이페이지</a>
+        <a href="{% url 'm_logout' %}">로그아웃</a>
+        {% if profile == "" %}
+        <img class="main_profile" src="{% url 'm_download' 'nan' %}">
+        {%else%}
+        <img class="main_profile" src="{% url 'm_download' profile %}">
+        {% endif %}
+        {% endif %}
+        {% else %}
+        <a href="{% url 'm_login' %}">로그인</a>
+        {% endif %}
+    </ul>
+</div>
+
+<div class="regi">
+    <div class="card">
+        <div class="card-body p-5">
+            <h3 class="text-uppercase text-center mb-5">회원가입</h3>
+            <form method="post" enctype="multipart/form-data"> {% csrf_token %}
+            <label id="id_check">아이디 중복확인</label>
+            <input type="text" name="username" id="user_id" class="textbox form-control form-control-lg" oninput="id_chk()" placeholder="계정 username"><br>
+            <label class="form-label" for="form3Example4cg">비밀번호 (8자 이상)</label>
+            <input type="text" name="password1" id="pw1" placeholder="비밀번호 password" class="textbox form-control form-control-lg"><br>
+            <label id="pw_check">비밀번호확인</label>
+            <input type="text" name="password2" id="pw2" onchange="pw_chk()" placeholder="비밀번호 확인 password_chk" class="textbox form-control form-control-lg" /><br>
+            <label class="form-label" for="form3Example3cg">이메일</label>
+            <input type="email" name="email" placeholder="이메일 email" class="textbox form-control form-control-lg"><br>
+            <label class="form-label" for="form3Example4cdg">성</label>
+            <input type="text" name="last_name" placeholder="성 last_name" class="textbox form-control form-control-lg" /><br>
+            <label class="form-label" for="form3Example4cdg">이름</label>
+            <input type="text" name="first_name" placeholder="이름 first_name" class="textbox form-control form-control-lg" /><br>
+            <label class="form-label" for="form3Example4cdg">전화번호</label>
+            <input type="tel" name="ph_num" placeholder="전화번호 ph_num" class="textbox form-control form-control-lg" /><br>
+            <label class="form-label" for="form3Example4cdg">MBTI</label>
+            <input type="text" name="MBTI" placeholder="MBTI" class="textbox form-control form-control-lg" /><br>
+            <label class="form-label" for="form3Example4cdg">생년월일</label>
+            <input type="date" name="birth" class="textbox form-control form-control-lg"><br>
+            <input type="text" name="addr1" id="addr1" readonly placeholder="우편번호 addr1" class="form form-control form-control-lg"><br>
+            <button type="button" onclick="daumPost()" class="form btn btn-success btn-block btn-lg gradient-custom-4 text-body" style="background-color: rgb(246, 197, 113); border-color: rgb(246, 197, 113);">우편번호 찾기</button><br />
+            <div class="form-outline mb-4">
+                <input type="text" name="addr2" id="addr2" readonly placeholder="주소 addr2" class="form form-control form-control-lg">
+            </div>
+            <div class="form-outline mb-4">
+                <label class="form-label" for="form3Example4cdg">상세주소</label>
+                <input type="text" name="addr3" id="addr3" placeholder="상세주소 addr3" class="form form-control form-control-lg">
+            </div>
+            <h5>파일 첨부</h5>
+            <div class="form-outline mb-4">
+            <input type="file" name="file" onchange="readURL(this)">
+            </div>
+            <img id="preview" src="#" width="100" height="100"><hr>
+            <div class="d-flex justify-content-center">
+                <button type="submit" class="form btn btn-success btn-block btn-lg gradient-custom-4 text-body" style="background-color: rgb(246, 197, 113); border-color: rgb(246, 197, 113);">등록</button>
+            </div>
+            <p class="text-center text-muted mt-5 mb-0">이미 회원이세요? <a href="#!"class="fw-bold text-body"><u>로그인 하기</u></a></p>
+            </form>
+        </div>
+    </div>
+</div>
+   
+
+<script src="{% static 'js/script.js' %}"></script>
+<script src="{% static 'js/img_view.js' %}"></script>
+<script src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
+<script src="//t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js"></script>
+<script src="http://code.jquery.com/jquery-latest.min.js"></script>
+<script>
+    function id_chk(){
+        if ($("#user_id").val().length < 5) {
+            $("#id_check").html("<b>5글자 이상 작성</b>");
+            return;
+        }
+        $.ajax({
+            url: "{% url 'id_chk' %}",
+            type: "get",
+            data: { "num": $("#user_id").val() },
+            success: function (data) {
+                if (data) msg = "<b>아이디 중복</b>";
+                else msg = "<b>사용가능한 아이디</b>";
+                $("#id_check").html(msg);
+            },
+        });
+    }
+    </script>

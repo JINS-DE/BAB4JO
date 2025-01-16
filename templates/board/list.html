@@ -1,0 +1,647 @@
+{% extends 'main/header.html' %}
+{% load static %}
+
+
+{% block nav %}
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.6.0/font/bootstrap-icons.css" />
+<script src="http://code.jquery.com/jquery-latest.min.js"></script>
+
+<div class="nav">
+
+  <div class="nav_wrap">
+    <p>  
+      <div class="hit_border">
+        <p class="top_title"> <b>※ 조회순 TOP 3 ※</b> </p>
+          <div class="hit_top3">
+            {% for i in "x"|rjust:"3" %}
+          <div class="Rank_{{forloop.counter}}">
+          <div class="Rank">
+            <div class="Rank_img">
+              <div class="ranking_num"></div>
+              <img id="Rank_{{forloop.counter}}" class="Rank_imgPreview" src="https://i.pinimg.com/originals/c4/cb/9a/c4cb9abc7c69713e7e816e6a624ce7f8.gif">
+            </div>
+            <div class="Rank_data">
+              <div class="Rank_title"></div>
+              <div class="Rank_writer">
+                <img class="profile_img" src="#">
+                <span class="Rank_writer_name"></span>
+              </div><br>
+              <div class="hitLikesIcons">
+                <i class="bi bi-eye-fill"></i> <span class="Rank_views"></span>
+                ❤ <span class="Rank_likes"></span>
+              </div>
+            </div>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+      </div>
+      <br>
+  
+      <div class="like_border">
+      <p class="top_title"> <b>※ 좋아요 TOP 3 ※</b> </p>
+      <div class="likes_top3">
+        {% for i in "x"|rjust:"3" %}
+        <div class="Rank_{{forloop.counter}}">
+          <div class="Rank">
+            <div class="Rank_img">
+              <div class="ranking_num"></div>
+              <img id="Rank_{{forloop.counter}}" class="Rank_imgPreview" src="https://i.pinimg.com/originals/c4/cb/9a/c4cb9abc7c69713e7e816e6a624ce7f8.gif">
+            </div>
+            <div class="Rank_data">
+              <div class="Rank_title"></div>
+              <div class="Rank_writer">
+                <img class="profile_img" src="#">
+                <span class="Rank_writer_name"></span>
+              </div><br>
+              <div class="hitLikesIcons">
+                ❤ <span class="Rank_likes"></span>
+                <i class="bi bi-eye-fill"></i> <span class="Rank_views"></span>
+              </div>
+            </div>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+  
+    </div>
+  </div>
+  </div>
+<script>
+  $(function(){
+    // 조회순 TOP 3
+    $.ajax({
+      url : '{% url "b_hit_top3" %}', 
+      type : 'get',
+      success : function(hit_top3){
+        for(rank=1; rank<4; rank++){
+          if("overlap" in hit_top3[rank]){  // 중복이면
+            $(".hit_top3 .Rank_"+rank+" .Rank .ranking_num").html("<b>"+(rank-1)+"</b>")
+          }else{
+            $(".hit_top3 .Rank_"+rank+" .Rank .ranking_num").html("<b>"+rank+"</b>")
+          }
+          /*$(".hit_top3 .Rank_"+rank+" .Rank .Rank_imgPreview").attr("src", "{% static 'image/175125-이경문순대곱창.jpg' %}")*/
+          $(".hit_top3 .Rank_"+rank+" .Rank .Rank_imgPreview").attr("src", "/static/image/"+hit_top3[rank].filename)
+          /* 파일을 서버로 보내서 서버가 해석할때 % static % 경로를 보내버리면, static 경로로 받아들여서 서버가 경로 해석을 이미 해버림
+           따라서 static 경로로 해석되지 않도록 경로 전체를 변수로 만들어서 보내줘야함.*/
+          
+          $(".hit_top3 .Rank_"+rank+" .Rank #Rank_"+rank).attr('value', hit_top3[rank].id);  // 해당 아이디에 value속성(해당사진의 id값) 추가해주기
+
+          $(".hit_top3 .Rank_"+rank+" .Rank .Rank_imgPreview").click( // 클릭하면 이미지 발생
+            function(e){  // 이벤트가 발생한 객체를 받아옴
+              location.href="detail/"+e.target.getAttribute('value')  // 이벤트가 발생한 target의 vlaue 속성을 받아옴
+            })
+          // error 이유 : .click(location.href="detail/"+경로) 로 적으면 click이벤트를 준비시키는 과정에 바로 location.href를 실행해버림
+          //        ==> .click(function(){location.href="detail/"+경로}) 로 작성해서 click이벤트를 준비할때 function을 준비하고, click이벤트가 발생하면 function이 실행되도록 처리
+
+          
+          $(".hit_top3 .Rank_"+rank+" .Rank .Rank_title").html("<b>"+hit_top3[rank].title+"</b>")
+          if(hit_top3[rank].profile == ""){
+            $(".hit_top3 .Rank_"+rank+" .Rank .profile_img").attr("src", "/static/image/DONOTDELETE_DY/profile.jpg")
+          }else{
+            $(".hit_top3 .Rank_"+rank+" .Rank .profile_img").attr("src", "/static/image/"+hit_top3[rank].profile)
+          }
+          $(".hit_top3 .Rank_"+rank+" .Rank .Rank_writer_name").html(hit_top3[rank].username)
+          $(".hit_top3 .Rank_"+rank+" .Rank .Rank_views").text(hit_top3[rank].hit)
+          $(".hit_top3 .Rank_"+rank+" .Rank .Rank_likes").text(hit_top3[rank].likes)
+        }
+      },error : function(){
+        console.log("hit_TOP_3 에러발생")
+      }
+    })
+    
+    // 좋아요 TOP 3
+    $.ajax({
+      url : "{% url 'b_likes_top3' %}",
+      type : "get",
+      success : function(likes_top3){
+        for(rank=1; rank<4; rank++){
+          if("overlap" in likes_top3[rank]){  // 중복이면
+            $(".likes_top3 .Rank_"+rank+" .Rank .ranking_num").html("<b>"+(rank-1)+"</b>")
+          }else{
+            $(".likes_top3 .Rank_"+rank+" .Rank .ranking_num").html("<b>"+rank+"</b>")
+          }
+          $(".likes_top3 .Rank_"+rank+" .Rank .Rank_imgPreview").attr("src", "/static/image/"+likes_top3[rank].filename)
+          
+          $(".likes_top3 .Rank_"+rank+" .Rank #Rank_"+rank).attr('value', likes_top3[rank].id)
+          $(".likes_top3 .Rank_"+rank+" .Rank .Rank_imgPreview").click(
+            function(e){
+              location.href="detail/"+e.target.getAttribute('value')
+            })
+
+          $(".likes_top3 .Rank_"+rank+" .Rank .Rank_title").html("<b>"+likes_top3[rank].title+"</b>")
+          //console.log("likes_top3["+rank+"].profile : ", likes_top3[rank].profile)
+          if(likes_top3[rank].profile == ""){
+            $(".likes_top3 .Rank_"+rank+" .Rank .profile_img").attr("src", "/static/image/DONOTDELETE_DY/profile.jpg")
+          }else{
+            $(".likes_top3 .Rank_"+rank+" .Rank .profile_img").attr("src", "/static/image/"+likes_top3[rank].profile)
+          }
+          $(".likes_top3 .Rank_"+rank+" .Rank .Rank_writer_name").html(likes_top3[rank].username)
+          $(".likes_top3 .Rank_"+rank+" .Rank .Rank_views").text(likes_top3[rank].hit)
+          $(".likes_top3 .Rank_"+rank+" .Rank .Rank_likes").text(likes_top3[rank].likes)
+        }
+      },error : function(){
+        console.log("likes_TOP_3 에러발생")
+      }
+    })
+  })
+</script>
+{% endblock nav %}
+
+{% block section %}
+<head>
+<!-- Bootstrap CSS -->
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.6.0/font/bootstrap-icons.css" />
+</head>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM" crossorigin="anonymous"></script>
+<script src="http://code.jquery.com/jquery-latest.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/js-cookie@rc/dist/js.cookie.min.js"></script>
+
+<style>
+    .b_radio {
+      display: flex;
+      float: right;
+      margin-right: 70px;
+      margin-bottom: 10px;
+      text-shadow: 1px 1px 1px gray;
+    }
+
+    .board_orderby_base{
+      width: 700px;
+      height: 190px;
+      margin : auto;
+      display : flex;
+      /* flex-wrap : wrap; */
+    }
+
+    .board_imgWindow {
+      width: 615px;
+      left: 35px;
+      overflow : hidden;
+      position: relative;
+      border-radius: 10px;
+      box-shadow: 5px 5px 5px gray;
+    }
+
+    .board_views{
+        display : flex;
+        left: 0px;
+        position: relative;
+        padding: 0;
+    }
+
+    .orderby_image{
+        width: 180px;
+        margin: 0 4pt;
+    }
+
+    .b_one {
+        box-shadow: 5px 5px 5px gray;
+        border: 0;
+    }
+
+    .write {
+        position: relative;
+        display: block;
+        left: 590px;
+        margin-top: 60px;
+    }
+
+    .hr {
+        width: 90%;
+        left: 6%; 
+        position: relative;
+    }
+
+</style>
+
+<div class ="b_radio">
+    <div class="form-check">
+      <span id="testid" style="cursor: pointer;" onclick="b_listArray('id')" href="#"><b>업데이트순&nbsp;&nbsp;</b></span>
+    </div>
+    <div class="form-check">
+      <span id="testlikes" style="cursor: pointer;" onclick="b_listArray('likes')" href="#"><b>좋아요순&nbsp;&nbsp;</b></span>
+    </div>
+    <div class="form-check">
+      <span id="testhit" style="cursor: pointer;" onclick="b_listArray('hit')" href="#"><b>조회순&nbsp;&nbsp;</b></span>
+    </div>
+</div>
+
+<div class="b_base">
+  <div class = "board_orderby_base">
+    {# <i class="order_rightBtn bi bi-arrow-left-square" onclick="oder_preBtn()" style="font-size: xx-large;" ></i> #}
+    <div class="board_imgWindow">
+      <ul class = "board_views">
+        {# 이미지 list 들어감 #}
+        {# <img class="orderby_image"> #}
+      </ul>
+    </div>
+
+    {# <i class="order_leftBtn bi bi-arrow-right-square" onclick="order_nextBtn()" style="font-size: xx-large;"></i> #}
+  </div>
+
+  <script>
+
+    b_listArray('id')   // 처음에는 업데이트 순 정렬되어있음
+    var totalSlides = 0   //게시글 갯수
+
+    function b_listArray(criterion){  // 정렬기준따라 전송 => rest_views에서 order_by로 정렬함
+      //event.preventDefault()
+      //event.stopPropagation()
+      $(".board_views").finish()  // 현재 실행중인 에니메이션(함수) 중지 + 대기중인 모든 애니메이션(함수) 제거 + 선택요소에 대한 모든 애니메이션을 완료로
+      $(".board_views").css("left", "20px")  // 슬라이드바 원위치
+      slideIndex = 0
+      $.ajax({
+        url : "{% url 'b_list_array' %}",
+        type : "GET", 
+        data : {"criterion" : criterion}, 
+        success : function(jsonData){
+            totalSlides = jsonData['data'].length
+            console.log("totalSlides : ", totalSlides)
+            let b_list_html = ""
+            for(i=0;i<jsonData['data'].length;i++){
+                b_list_html += '<img class="orderby_image" src="/static/image/'+jsonData["data"][i]["fields"]["file_name"]+'" onclick="location.href=\'detail/'+jsonData["data"][i]["pk"]+'\'" >'
+            }
+            $(".board_views").html(b_list_html)
+            setTimeout(showSlides(totalSlides), 1000)  // 로딩되면 2초(2000) 기다렸다가 시작
+                $("#testid").css("color","#000000");
+                $("#testlikes").css("color","#000000");
+                $("#testhit").css("color","#000000");
+                $("#test"+criterion).css("color","#FFAC1C");
+            },error : function(){
+            console.log("b_listArray 에러발생")
+            }   
+      })
+    }
+  
+    // 자동 슬라이드 만들기
+    var slideIndex = 1
+    var slideWidth = 190   // 사진 너비만큼
+  
+    function showSlides(totalSlides){
+      console.log("slideIndex : ", slideIndex)
+      console.log("slideWidth*slideIndex : ", slideWidth*slideIndex)
+  
+      if(slideIndex == 0){
+        $(".board_views").animate({"left": 20-(slideWidth*slideIndex) + 'px'})
+      }else{
+        $(".board_views").animate({"left": 20-(slideWidth*slideIndex) + 'px'}, 3000)
+      }
+      slideIndex++;
+      if (slideIndex === totalSlides-2) { // 마지막까지 오면
+          slideIndex = 0   // 처음으로 돌아감
+      }
+      if(slideIndex == 0){
+        setTimeout(showSlides, 0)  // 밀리초를 기다린 후에 함수 실행(5초:5000)
+      }else{
+        setTimeout(showSlides, 4000)  // 밀리초를 기다린 후에 함수 실행(5초:5000)
+        // 총시간 5초 - 사진 넘기는거 3초 => delay가 2초처럼 보임
+      }
+    }
+  
+  </script>
+  <br>
+  <hr class="hr">
+
+  <button type="button" class="write btn btn-outline-secondary" onclick="location.href='/board/write'">🖋 글작성</button>
+  <div class="b_list">
+    {% for s in data%}
+    {% for i,k in s.items %}
+    <div class="b_one">
+      <div class="b_image">
+        <img class="b_image" src="{% url 'download' i.file_name %}" onclick="location.href='detail/{{i.id}}'" >
+      </div>
+
+      <div class="b_one_title">
+      
+        <i class="bi bi-caret-right-square"></i><b><font size='4'> 가게이름 : {{i.title}}</font></b></i><br>
+        작성날짜 : {{i.save_date}}<br>
+        작성자 :
+        {% if i.user_id.profile == "" %}
+          <img class="profile_img" src="/static/image/DONOTDELETE_DY/profile.jpg">
+        {% else %}
+          <img class="profile_img" src="/static/image/{{i.user_id.profile}}">
+        {% endif %}
+
+        {{i.user_id}}<br>
+        <i class="bi bi-eye-fill">{{i.hit}}</i>
+          🖤{{i.likes.count}}
+        <i class="bi bi-chat-right-text-fill"> {{k}}</i>
+      </div>
+    </div>
+    {% endfor %}
+    {% endfor %}
+  </div>
+
+  <nav aria-label="Page navigation example">
+    <ul class="pagination">
+      <li class="page-item">
+        {%if data.has_previous%}
+        <a class="page-link" href="?start={{data.previous_page_number}}" aria-label="Previous">
+          <span aria-hidden="true">&laquo;</span>
+          {%else%}
+          <a class="page-link" href="#" aria-label="Previous">
+            <span aria-hidden="true">&laquo;</span>
+          </a>
+          {%endif%}
+        </a>
+      </li>
+      {%for i in data.paginator.page_range%}
+      <li class="page-item"><a class="page-link" href="?start={{i}}">{{forloop.counter}}</a></li>
+        {%endfor%}
+        
+        <li class="page-item">
+          {%if data.has_next%}
+          <a class="page-link" href="?start={{data.next_page_number}}" aria-label="Next">
+            <span aria-hidden="true">&raquo;</span>
+            {%else%}
+            <a class="page-link" href="#" aria-label="Next">
+              <span aria-hidden="true">&raquo;</span>
+            </a>
+            {%endif%}
+          </a>
+        </li>
+      </li>
+    </ul>
+  </nav> 
+
+<script>
+  const csrftoken = Cookies.get('csrftoken')
+  function setHart(id, num, user){
+    if( user == 'AnonymousUser' ){
+        alert('로그인 먼저 진행하세요')
+        location.href = '/member/login'
+        return 
+    }
+    $.ajax({
+        url : "{% url 'b_like' %}", type : "put",
+        data : {"num":num },
+        headers : {'X-CSRFToken':csrftoken} ,
+        success : function(dict_likes){
+            if(dict_likes.likes == 0 ) h = '❤'
+            else h = '🖤'
+            $("#hart"+id).html( h )
+            $("#likes_cnt"+id).html(dict_likes.likes_cnt)
+        }
+    })
+  }
+</script>
+
+</div>
+{% endblock section %}
+
+
+
+{% block aside %}
+<div class="aside">
+<script type="text/javascript" src="//dapi.kakao.com/v2/maps/sdk.js?appkey=a940651331fabaff83a25f635f19530f&libraries=services"></script>   <!-- kakao map API key -->
+<style>
+  #placesList {
+    width: 150px;
+
+  }
+</style>
+<div class="map_wrap">
+  <b style="text-align: center; color: burlywood; font-size: 13pt;">가고싶은 장소를 검색해보세요&nbsp;<i class="bi bi-search" style="font-size: 21pt;"></i></b>
+  
+  <div id="map"></div>
+
+  <div id="menu_wrap" class="bg_white">
+      <div class="option">
+          <div>
+              <form onsubmit="searchPlaces(); return false;">
+                  키워드 : <input type="text" value="종로3가 맛집" id="keyword" size="15"> 
+                  <button type="submit">검색하기</button> 
+              </form>
+          </div>
+      </div>
+      <hr>
+      <div>
+        <div id="placesList"></div>
+        <div id="map_pagination"></div>
+      </div>
+  </div>
+</div>
+<script type="text/javascript" src="//dapi.kakao.com/v2/maps/sdk.js?appkey=a940651331fabaff83a25f635f19530f&libraries=services"></script>
+<script>
+// 마커를 담을 배열입니다
+var markers = [];
+
+var mapContainer = document.getElementById('map'), // 지도를 표시할 div 
+    mapOption = {
+        center: new kakao.maps.LatLng(37.566826, 126.9786567), // 지도의 중심좌표
+        level: 3 // 지도의 확대 레벨
+    };  
+
+// 지도를 생성합니다    
+var map = new kakao.maps.Map(mapContainer, mapOption); 
+
+// 장소 검색 객체를 생성합니다
+var ps = new kakao.maps.services.Places();  
+
+// 검색 결과 목록이나 마커를 클릭했을 때 장소명을 표출할 인포윈도우를 생성합니다
+var infowindow = new kakao.maps.InfoWindow({zIndex:1});
+
+// 키워드로 장소를 검색합니다
+searchPlaces();
+
+// 키워드 검색을 요청하는 함수입니다
+function searchPlaces() {
+
+    var keyword = document.getElementById('keyword').value;
+
+    if (!keyword.replace(/^\s+|\s+$/g, '')) {
+        alert('키워드를 입력해주세요!');
+        return false;
+    }
+
+    // 장소검색 객체를 통해 키워드로 장소검색을 요청합니다
+    ps.keywordSearch( keyword, placesSearchCB); 
+}
+
+// 장소검색이 완료됐을 때 호출되는 콜백함수 입니다
+function placesSearchCB(data, status, map_pagination) {
+    if (status === kakao.maps.services.Status.OK) {
+
+        // 정상적으로 검색이 완료됐으면
+        // 검색 목록과 마커를 표출합니다
+        displayPlaces(data);
+
+        // 페이지 번호를 표출합니다
+        displayPagination(map_pagination);
+
+    } else if (status === kakao.maps.services.Status.ZERO_RESULT) {
+
+        alert('검색 결과가 존재하지 않습니다.');
+        return;
+
+    } else if (status === kakao.maps.services.Status.ERROR) {
+
+        alert('검색 결과 중 오류가 발생했습니다.');
+        return;
+
+    }
+}
+
+// 검색 결과 목록과 마커를 표출하는 함수입니다
+function displayPlaces(places) {
+
+    var listEl = document.getElementById('placesList'), 
+    menuEl = document.getElementById('menu_wrap'),
+    fragment = document.createDocumentFragment(), 
+    bounds = new kakao.maps.LatLngBounds(), 
+    listStr = '';
+    
+    // 검색 결과 목록에 추가된 항목들을 제거합니다
+    removeAllChildNods(listEl);
+
+    // 지도에 표시되고 있는 마커를 제거합니다
+    removeMarker();
+    
+    for ( var i=0; i<3; i++ ) {
+
+        // 마커를 생성하고 지도에 표시합니다
+        var placePosition = new kakao.maps.LatLng(places[i].y, places[i].x),
+            marker = addMarker(placePosition, i), 
+            itemEl = getListItem(i, places[i]); // 검색 결과 항목 Element를 생성합니다
+
+        // 검색된 장소 위치를 기준으로 지도 범위를 재설정하기위해
+        // LatLngBounds 객체에 좌표를 추가합니다
+        bounds.extend(placePosition);
+
+        // 마커와 검색결과 항목에 mouseover 했을때
+        // 해당 장소에 인포윈도우에 장소명을 표시합니다
+        // mouseout 했을 때는 인포윈도우를 닫습니다
+        (function(marker, title) {
+            kakao.maps.event.addListener(marker, 'mouseover', function() {
+                displayInfowindow(marker, title);
+            });
+
+            kakao.maps.event.addListener(marker, 'mouseout', function() {
+                infowindow.close();
+            });
+
+            itemEl.onmouseover =  function () {
+                displayInfowindow(marker, title);
+            };
+
+            itemEl.onmouseout =  function () {
+                infowindow.close();
+            };
+        })(marker, places[i].place_name);
+
+        fragment.appendChild(itemEl);
+    }
+
+    // 검색결과 항목들을 검색결과 목록 Element에 추가합니다
+    listEl.appendChild(fragment);
+    menuEl.scrollTop = 0;
+
+    // 검색된 장소 위치를 기준으로 지도 범위를 재설정합니다
+    map.setBounds(bounds);
+}
+
+// 검색결과 항목을 Element로 반환하는 함수입니다
+function getListItem(index, places) {
+
+    var el = document.createElement('li'),
+    itemStr = '<span class="markerbg marker_' + (index+1) + '"></span>' +
+                '<div class="info">' +
+                '   <h5>' + places.place_name + '</h5>';
+
+    if (places.road_address_name) {
+        itemStr += '    <span>' + places.road_address_name + '</span>' +
+                    '   <span class="jibun gray">' +  places.address_name  + '</span>';
+    } else {
+        itemStr += '    <span>' +  places.address_name  + '</span>'; 
+    }
+                 
+      itemStr += '  <span class="tel">' + places.phone  + '</span>' +
+                '</div>';           
+
+    el.innerHTML = itemStr;
+    el.className = 'item';
+
+    return el;
+}
+
+// 마커를 생성하고 지도 위에 마커를 표시하는 함수입니다
+function addMarker(position, idx, title) {
+    var imageSrc = 'https://t1.daumcdn.net/localimg/localimages/07/mapapidoc/marker_number_blue.png', // 마커 이미지 url, 스프라이트 이미지를 씁니다
+        imageSize = new kakao.maps.Size(36, 37),  // 마커 이미지의 크기
+        imgOptions =  {
+            spriteSize : new kakao.maps.Size(36, 691), // 스프라이트 이미지의 크기
+            spriteOrigin : new kakao.maps.Point(0, (idx*46)+10), // 스프라이트 이미지 중 사용할 영역의 좌상단 좌표
+            offset: new kakao.maps.Point(13, 37) // 마커 좌표에 일치시킬 이미지 내에서의 좌표
+        },
+        markerImage = new kakao.maps.MarkerImage(imageSrc, imageSize, imgOptions),
+            marker = new kakao.maps.Marker({
+            position: position, // 마커의 위치
+            image: markerImage 
+        });
+
+    marker.setMap(map); // 지도 위에 마커를 표출합니다
+    markers.push(marker);  // 배열에 생성된 마커를 추가합니다
+
+    return marker;
+}
+
+// 지도 위에 표시되고 있는 마커를 모두 제거합니다
+function removeMarker() {
+    for ( var i = 0; i < markers.length; i++ ) {
+        markers[i].setMap(null);
+    }   
+    markers = [];
+}
+
+// 검색결과 목록 하단에 페이지번호를 표시는 함수입니다
+function displayPagination(map_pagination) {
+    var paginationEl = document.getElementById('map_pagination'),
+        fragment = document.createDocumentFragment(),
+        i; 
+
+    // 기존에 추가된 페이지번호를 삭제합니다
+    while (paginationEl.hasChildNodes()) {
+        paginationEl.removeChild (paginationEl.lastChild);
+    }
+
+    for (i=1; i<=map_pagination.last; i++) {
+        var el = document.createElement('a');
+        el.href = "#";
+        el.innerHTML = i;
+
+        if (i===map_pagination.current) {
+            el.className = 'on';
+        } else {
+            el.onclick = (function(i) {
+                return function() {
+                  map_pagination.gotoPage(i);
+                }
+            })(i);
+        }
+
+        fragment.appendChild(el);
+    }
+    paginationEl.appendChild(fragment);
+}
+
+// 검색결과 목록 또는 마커를 클릭했을 때 호출되는 함수입니다
+// 인포윈도우에 장소명을 표시합니다
+function displayInfowindow(marker, title) {
+    var content = '<div style="padding:5px;z-index:1;">' + title + '</div>';
+
+    infowindow.setContent(content);
+    infowindow.open(map, marker);
+}
+
+ // 검색결과 목록의 자식 Element를 제거하는 함수입니다
+function removeAllChildNods(el) {   
+    while (el.hasChildNodes()) {
+        el.removeChild (el.lastChild);
+    }
+}
+</script>
+</div>
+{% endblock aside %}

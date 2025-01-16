@@ -1,0 +1,42 @@
+{% extends 'main/header.html' %}
+{% load static %}
+
+{% block section %}
+<style>
+
+    .sec {
+        width: 100%;
+    }
+
+</style>
+<section class="write_bg" align="center">
+<div class="write_list_bg"></div>
+<div class = 'write_list_all'>
+    <p><h2 align="center"><b>리뷰 수정</h2></b>
+        <form method="post" enctype="multipart/form-data">{% csrf_token %}
+            <b>작성자<br></b> <input type="text" readonly name="user_name" value="{{ user.username }}" style="width: 300px; height: 30px;"><p><p> 
+            <b>식당명</b> <br><input type="text" name="title" style="width: 300px; height: 30px;" value="{{list.title}}"><p><p>
+            <b>내용</b><p><textarea class="text_area" cols="40" rows="10" name="content">{{list.content}}</textarea><br>
+            <b>(띄어쓰기 줄바꿈 포함 <span id="counter">0</span> 자/250자)</p></b><hr>
+            <b>이미지<br></b> <input type="file" name="file" onchange="readURL(this)"><p>
+            <img id="preview" src="{% url 'download' list.file_name %}" width="300" height="200">
+            <div class="b_writeBtn">
+                <input class="btn btn-primary" type="submit" value="수정 완료">
+                <button type="button" class="btn btn-outline-secondary"onclick="history.back()">목록이동</button>
+            </div>
+    </form>
+</div>
+  <script type="text/javascript" src="http://code.jquery.com/jquery-1.12.4.min.js"></script>
+  <script>
+$('.text_area').keyup(function (e){
+    var content = $(this).val();
+    $('#counter').text(content.length); 
+  
+   // var redex = /\s/ig; 
+    //var blank = $(this).val().toString().replace(redex, "").length; 
+    //$('#counter_space').text(blank); 
+});
+</script>
+{% endblock %}
+
+  

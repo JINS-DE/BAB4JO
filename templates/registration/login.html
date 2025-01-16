@@ -1,0 +1,141 @@
+{% load static %}
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="{% static 'css/style.css' %}?after" type="text/css">
+    <link href="//maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" rel="stylesheet" id="bootstrap-css">
+
+<style>
+    .login_index{
+        background: url("https://mp-seoul-image-production-s3.mangoplate.com/a4283e5725fb56755b9bbeb8f285d0dc.jpg") no-repeat center fixed;
+        background-size: cover;
+        height: 100%;
+        width: 100%;
+        animation: fadeIn 1s;
+        z-index: -1;
+        position: absolute;
+    }
+
+    @keyframes fadeIn {
+        from {
+            opacity: 0;
+        }
+        to {
+            opacity: 1;
+        }
+    }
+
+    .login_box{
+        width:350px;
+        margin: 100px auto 0px;
+    }
+
+    .main_shade{
+        background-color: black;
+        opacity: 30%;
+        position: absolute;
+        z-index: 0;
+        height: 100%;
+        width: 100%;
+    }
+
+    .main_header {
+        width: 1000px;
+        color: white;
+        margin: 0px 50px 30px auto;
+        padding-top: 30px;
+        position: relative;
+}
+
+    .header_logo {
+        height: 100px;
+        width: 100px;
+        position: absolute;
+        color:rgb(246, 197, 113);
+        font-family:Impact, Haettenschweiler, 'Arial Narrow Bold', sans-serif;
+        font-size: x-large;
+        z-index: 1500;
+        padding-top: 15px;
+        left: 530px;
+        background-color: transparent;
+    }
+
+    ul {
+        width: 700px;
+        right: 100px;
+        padding-top: 30px;
+        position: absolute;
+        z-index: 1;
+    }
+
+    ul a {
+        margin-left: 50px;
+        text-align: center;
+        font-size: large;
+        color: white;
+    }
+
+    ul a:hover {
+        color: white;
+        border-bottom: 3px solid orange;
+        padding-bottom: 5px;
+        transition: all 0.25s;
+    }
+
+    ul a:link {
+        color:white
+    }
+
+    ul a:visited {
+        color: white;
+    }
+
+</style>
+
+<div class="main_shade"></div>
+<section class="login_index" align="center">
+    <div class="container py-5 h-100">
+            <div class="row d-flex justify-content-center align-items-center h-100"></div>
+    </div> 
+</section>
+<div class="header_logo" align="center">Beautiful<br>Soup</div>
+<ul class="main_header" align="right">
+    <a href="/">HOME</a>
+    <a href="{% url 'b_list' %}">게시판</a>
+    {% if user.is_active %}
+    {% if user.username == 'admin' %}
+    <a href="{% url 'm_info' user.id %}">마이페이지</a>
+    <a href="{% url 'm_membership' %}">회원정보</a>
+    <a href="{% url 'm_logout' %}">로그아웃</a>
+    {% else %}
+    <a href="{% url 'm_info' user.id %}">마이페이지</a>
+    <a href="{% url 'm_logout' %}">로그아웃</a>
+    {% endif %}
+    {% else %}
+    {% if '/login' in request.path %}
+    <a style="color:orange" href="{% url 'm_login' %}">로그인</a>
+    {% else %}
+    <a href="{% url 'm_login' %}">로그인</a>
+    {% endif %}
+    {% endif %}
+</ul>
+<form method='POST'>{% csrf_token %}
+    <div class="login_box">
+        <div class="card shadow-2-strong" style="border-radius: 1rem;">
+            <div class="card-body p-5 text-center">
+            <h3 class="mb-5">로그인</h3>
+            <div class="form-outline mb-4">
+                <input type="text" id="typeEmailX-2" name="username" class="form-control form-control-lg" />
+                <label class="form-label" for="typeEmailX-2">아이디</label>
+            </div>
+            <div class="form-outline mb-4">
+                <input type="password" id="typePasswordX-2" name="password" class="form-control form-control-lg" />
+                <label class="form-label" for="typePasswordX-2">비밀번호</label>
+            </div>
+            <hr class="my-4">
+            <button class="btn btn-primary btn-lg btn-block" style="position: relative; top: 0; left: 0; background-color: rgb(246, 197, 113); border-color: rgb(246, 197, 113);" type="submit" value="로그인">로그인</button>
+            <hr class="my-4">
+            <button class="btn btn-lg btn-block btn-primary mb-2" style="position: relative; top: 0; left: 0; background-color: orange; border-color: orange;" type="button" onclick="location.href='{% url 'm_register' %}'">회원가입</button>
+            </div>
+        </div>
+    </div>
+</form>

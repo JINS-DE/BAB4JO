@@ -1,0 +1,606 @@
+{% extends 'main/header.html' %}
+{% load static %}
+
+
+{% block nav %}
+<script src="http://code.jquery.com/jquery-latest.min.js"></script>
+<script type="text/javascript" src="//dapi.kakao.com/v2/maps/sdk.js?appkey=a940651331fabaff83a25f635f19530f&libraries=services"></script>   <!-- kakao map API key -->
+
+<style>
+  .map_data_wrap {
+    margin: auto;
+    width: 95%;
+    text-align: left;
+    border: 2px solid gray;
+    border-radius: 15pt;
+    background-color: rgba(197, 197, 197, 0.4);
+    padding: 15pt;
+  }
+  .map_data_line {
+    display: flex;
+    align-items: center;
+    margin: 10px 0;
+  }
+  .map_data_title { /* 가게이름 쪽 */
+    width: 35px;
+    color: gray;
+    margin-left: 8px;
+  }
+  .place_name {
+    font-size: 17pt;
+    font-weight: bold;
+  }
+  .map_data_content {
+    width: 100%;
+  }
+
+</style>
+
+
+<div class="nav">
+  <div class="nav_content">
+      <div id="map">
+          {# map 지도 넣음 #}
+          <img src="https://cdn.dribbble.com/users/255281/screenshots/2850148/loading_animation_selectroot.gif" width="100%">
+      </div>
+      <div class="map_data_wrap">
+        <div class="map_detail"></div>
+      </div>
+  </div>
+</div>
+
+<script>
+  // nav function
+  $(function(){
+    let title = $(".title").text()
+    // map 크롤링 해오기(selenium)
+    $.ajax({
+      url: "{% url 'map_load' %}", 
+      type: "GET", 
+      data: {"title" : title }, 
+      success: function(map_data){
+        console.log("map", map_data.name, map_data.addr, map_data.tel, map_data.util)
+        if(map_data.name == "" && map_data.addr == ""){ // 
+            $(".map_detail").html("검색결과가 없습니다.")
+            $("#map").html('<img src="https://cdn.icon-icons.com/icons2/1369/PNG/512/-error-outline_90275.png" style="width: 100%; height: 100%;">')
+        } else{
+            let map_html = ""
+            li = [
+              '<div class="map_data_content place_name">'+map_data.name+'</div>', 
+              '<div class="map_data_content">'+map_data.addr+'</div>', 
+              '<div class="map_data_content">'+map_data.tel+'</div>', 
+              '<div class="map_data_content">'+map_data.util+'</div>'
+            ]
+            map_data_name = [
+              '<i class="bi bi-shop-window"></i>',   // 가게이름
+              '<i class="bi bi-geo-alt"></i>',  // 가게주소
+              '<i class="bi bi-telephone"></i>',  // 전화번호
+              '<i class="bi bi-star"></i>'    // 편의시설
+              ]
+            //for문 밖으로 다 꺼내야 각각 css 적용가능함
+            for ( let i = 0; i < 4; i++)
+                if (li[i] == '<div class="map_data_content"></div>'){
+                    map_html += '<div class="map_data_line"><div class="map_data_title">'+map_data_name[i]+'</div><div class="map_data_content">정보없음</div></div>'
+                    $(".map_detail").html(map_html)
+                } else {
+                    map_html += '<div class="map_data_line"><div class="map_data_title">'+map_data_name[i]+'</div>'+li[i]+'</div>'
+                    $(".map_detail").html(map_html)
+                }
+            title=title.replace(/"/g,"")
+            kakaomapMarkAll(map_data.name,title)
+        }
+    },
+    error: function(){
+    console.log("error 발생입니다.")
+    }
+    })
+  })
+  </script>
+{% endblock nav %}
+
+{% block section %}
+<script src="http://code.jquery.com/jquery-latest.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/js-cookie@rc/dist/js.cookie.min.js"></script>
+
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.6.0/font/bootstrap-icons.css">
+
+<!--게시물 창-->
+<div class="de_all_list">
+  <div class="icon">
+    {% if user.username == list.user_name %}
+    <i class="bi bi-pen-fill" style="color: gray;" onclick="location.href='{% url 'b_modify' list.id %}'" ></i>
+    <i class="bi bi-trash" style="color: gray;" onclick="location.href='{% url 'b_delete' list.id %}'"></i>
+    {% endif %}
+    <i class="bi bi-x-circle" onclick="location.href = document.referrer"></i>      {# document.referrer : 뒤로가기+새로고침 #}
+  </div>
+  <div class="user">
+    <b class="b_writerData">
+      {% if list.user_id.profile == "" %}
+        <img class="profileImg" src="/static/image/DONOTDELETE_DY/profile.jpg">
+      {% else %}
+        <img class="profileImg" src="/static/image/{{list.user_id.profile}}">
+      {% endif %}
+      {{list.user_name}}
+    </b>
+  </div>
+  <img class="list_img" src="{% url 'download' list.file_name %}"><br>
+
+  <div>
+    <span class="heart_hit_num">
+      <span id="likes_heart" onclick="setHeart('{{list.id}}','{{user.username}}')">
+        {% if user in list.likes.all %}
+        ❤️
+        {% else %}
+        🖤
+        {% endif %}
+      </span>
+      <b class="likes_cnt">{{list.likes.count}}</b>&nbsp;
+      <span id="modal_likesList">
+        <input type="button" class="likes_modal" value="▽" onclick="modal_btn()" style="margin-right: 5px;">
+        <span id="modal">
+          {# 모달창 #}
+        </span>
+      </span>  
+      <i class="bi bi-eye-fill"></i> <b style="margin-right: 5px">{{list.hit}}</b>
+    <i class="bi bi-chat-right-text-fill"></i> 
+    <span class="reply_cnt">{{reply_cnt}}</span>
+    </span>
+    <span class="day">
+      <i class="bi bi-calendar2-check"></i>
+      {{list.save_date| date:'Y-m-d'}}
+    </span>
+  </div>
+  <br><br>
+  <div class="b_listText">    
+    <div>
+      <span id="likes_users"></span>  
+    </div>
+    <b class="title">{{list.title}}</b>
+    <div class="content">{{list.content|linebreaksbr}}</div>
+  </div>
+</div>
+
+<br>
+
+<!--댓글 창-->
+<div class="re_ply">
+  <textarea id="user_reply" placeholder="댓글을 입력하세요"></textarea>
+  <button type="button" class="btn btn-primary" onclick="reply_add()">답글</button>
+  <p></p>
+  <div id="reply">
+    {# 댓글 내용 ajax #}
+  </div>
+  <div class="reply_moreBtn">
+    <input type="button" value="더보기" onclick="reply_more()">
+  </div>
+</div>
+
+
+
+<script>
+  //좋아요 list 모달창
+  function modal_btn(){
+    console.log($(".likes_modal").val())
+    if($(".likes_modal").val() == "▽"){
+      console.log("if문 입장")
+      $(".likes_modal").attr("value", "△")
+      $("#modal").css("display", "block")
+    }else{
+      console.log("else문 입장")
+      $(".likes_modal").attr("value", "▽")
+      $("#modal").css("display", "none")
+
+    }
+  }
+
+  //좋아요 list 가져오기
+  $(function(){
+    //console.log('{{list.id}}')  // string 11
+    //console.log({{list.id}})  // number 11
+    $.ajax({
+      url : "{% url 'b_like' %}",
+      type : "get",
+      data : {"num": {{list.id}}},    // error라고 생각하지만 아님
+      headers : {'X-CSRFToken':csrftoken},
+      success : function(dict_likes){
+        //console.log("좋아요 목록 실행")
+        let likesUsersHTML = ""
+        for(i=0;i<dict_likes.likes_users.length;i++){
+          //console.log("dict_likes.profile[i] : ", dict_likes.profile[i])
+          likesUsersHTML += "<img class='madal_profileImg' src='/static/image/"+dict_likes.profile[i]+"''>"
+          likesUsersHTML += "&#32;&#32;"+dict_likes.likes_users[i]
+          likesUsersHTML += "<br>"
+        }
+        //console.log("likesUsersHTML : ", likesUsersHTML)
+        $("#modal").html(likesUsersHTML)
+      }
+    })
+  })
+
+  //좋아요 버튼 누르기
+  function setHeart(num, user){
+    console.log("user : ", user)
+    if(user == ''){
+      alert('로그인 먼저 진행하세요')
+      location.href = '/member/login'
+      return 
+    }
+    $.ajax({
+      url : "{% url 'b_like' %}",
+      type : "put",
+      data : {"num": num},
+      headers : {'X-CSRFToken':csrftoken} ,
+      success : function(dict_likes){
+          if(dict_likes.likes == 0 ){
+            heart = '❤️'
+          }else{
+            heart = '🖤'
+          }
+          $("#likes_heart").html(heart)
+          $(".likes_cnt").html(dict_likes.likes_cnt)
+          //console.log("좋아요 목록 실행")
+          let likesUsersHTML = ""
+          //console.log("좋아요 list 길이 : ", dict_likes.likes_users.length)
+          if(dict_likes.likes_users.length == 0){
+            likesUsersHTML = "좋아요 없음"
+          }else{
+            for(i=0;i<dict_likes.likes_users.length;i++){
+              //console.log("profile : ", dict_likes.profile[i])
+              likesUsersHTML += "<img class='madal_profileImg' src='/static/image/"+dict_likes.profile[i]+"''>"
+              likesUsersHTML += "&#32;&#32;"+dict_likes.likes_users[i]
+              likesUsersHTML += "<br>"
+            }
+          }
+          //console.log("likesUsersHTML : ", likesUsersHTML)
+          $("#modal").html(likesUsersHTML)
+      }
+    })
+  }
+
+  const csrftoken = Cookies.get('csrftoken');
+  // table에서 전체 댓글 데이터 불러오기
+  var save_date = ""
+  let reply_appearance = 5   // 한번에 표시할 댓글 갯수
+  let reply_appearStart = reply_appearance+1    // 두번째부터 표시될 시작 댓글 index 
+  let reply_html = "" // 댓글 표시할 html
+  //function reply_display(oneTime = true){   // 페이지 로딩될때 한번 불러오고, 더보기 버튼 누르면 추가로 불러오도록
+  //  if(onTime){
+  $.ajax({    // 페이지 로딩될때 댓글 출력
+    url:"{% url 'reply_data' list.id %}",
+    type:"GET",
+    success: function(reply_all){
+      if(reply_all.replyData.length == 0){  // 등록된 댓글이 없을 때
+        $("#reply").html("")
+        $(".reply_moreBtn").html("등록된 댓글이 없습니다.")
+      }else{  // 등록된 댓글이 있을 때
+        if(reply_all.replyData.length <= reply_appearance){  // 등록된 댓글 5개 이하일 때
+          reply_appearance = reply_all.replyData.length
+          $(".reply_moreBtn").html("모든 댓글입니다.")
+        }
+        for(i=0;i<reply_appearance;i++){
+
+          // 날짜 이쁘게 뽑아오기
+          let date = new Date(reply_all.replyData[i].save_date)
+          //writeDate = date.getFullYear()+"-"+(date.getMonth()+1)+"-"+date.getDate()+"  "+ date.getHours()+'시 '+ date.getMinutes()+'분'
+          //현재 시간과 비교
+          let now = new Date(reply_all.time)
+          reply_year = now.getFullYear() - date.getFullYear() // 년도 차
+          reply_month = now.getMonth() - date.getMonth() // 개월 차
+          reply_day = now.getDate() - date.getDate() // 일수 차
+          reply_hour = now.getHours() - date.getHours() // 시간 차
+          reply_minute = now.getMinutes() - date.getMinutes() // 분 차
+          reply_second = now.getSeconds() - date.getSeconds() // 초 차
+
+          if(reply_year == 0){
+            if(reply_month == 0){
+              if(reply_day == 0){
+                if(reply_hour == 0){
+                  if(reply_minute == 0){
+                    writeDate = reply_second+"초 전"
+                  }else{writeDate = reply_minute+"분 전"}
+                }else{writeDate = reply_hour+"시간 전"}
+              }else{writeDate = reply_day +"일 전"}
+            }else{writeDate = (reply_month)+"개월 전"}
+          }else{writeDate = reply_year+"년 전"}
+
+
+          reply_html += "<div class='reply"+reply_all.replyData[i].id+" reply_block' align='left'>"
+          if(reply_all.profile[i]==""){
+            reply_html += "<img class='reply_profileImg' src='/static/image/DONOTDELETE_DY/profile.jpg'>"
+          }else{
+            reply_html += "<img class='reply_profileImg' src='/static/image/"+reply_all.profile[i]+"'>"
+          }
+          reply_html += "<div class='reply_text'>&#32;<b class='reply_title'>"+reply_all.replyData[i].user_id+"</b>"
+          reply_html += '<span class="reply_day"><i class="bi bi-clock"></i>&nbsp;'
+          reply_html += writeDate
+          reply_html += '</span>'
+          //삭제버튼
+          if('{{user.username}}' == reply_all.replyData[i].user_id){
+            reply_html += '<a class="reply_btn reply_modifyBtn" onclick="reply_delete('+reply_all.replyData[i].id+')">삭제</a>'
+          }else if('{{user.username}}' == "admin"){
+            reply_html += '<a class="reply_btn reply_modifyBtn" onclick="reply_delete('+reply_all.replyData[i].id+')">삭제</a>'
+          }
+          //수정버튼
+          if('{{user.username}}' == reply_all.replyData[i].user_id){
+            reply_html += '<a class="reply_btn reply_deleteBtn" onclick="reply_modify('+reply_all.replyData[i].id+')">수정</a>'
+          }else if('{{user.username}}' == "admin"){
+            reply_html += '<a class="reply_btn reply_deleteBtn" onclick="reply_modify('+reply_all.replyData[i].id+')">수정</a>'
+          }
+          //
+          reply_html += "<br><div class='reply_content'>"+reply_all.replyData[i].content+"</div></div></div>"
+        }
+        $("#reply").html(reply_html)
+      }
+    }
+  })
+
+  // 댓글 더보기 버튼 누를 때 댓글 출력
+  function reply_more(){
+    $.ajax({
+        url:"{% url 'reply_data' list.id %}",
+        type:"GET",
+        success: function(reply_all){
+          if(reply_appearStart+reply_appearance < reply_all.replyData.length){  // 더 보여줄 댓글이 5개 이상일 때
+            reply_end = reply_appearStart+reply_appearance
+          }else{  // 더 보여줄 댓글이 5개미만(마지막일때)
+            reply_end = reply_all.replyData.length
+            $(".reply_moreBtn").html("모든 댓글입니다.")
+          }
+          for(i=reply_appearStart;i<reply_end;i++){
+            // 날짜 이쁘게 뽑아오기
+            let date = new Date(reply_all.replyData[i].save_date)
+            writeDate = date.getFullYear()+"-"+(date.getMonth()+1)+"-"+date.getDate()+"  "+ date.getHours()+'시 '+ date.getMinutes()+'분'
+            reply_html += "<div class='reply"+reply_all.replyData[i].id+" reply_block' align='left'>"
+            if(reply_all.profile[i]==""){
+              reply_html += "<img class='reply_profileImg' src='/static/image/DONOTDELETE_DY/profile.jpg'>"
+            }else{
+              reply_html += "<img class='reply_profileImg' src='/static/image/"+reply_all.profile[i]+"'>"
+            }
+            reply_html += "<div class='reply_text'>&#32;<b class='reply_title'>"+reply_all.replyData[i].user_id+"</b>"
+            reply_html += '<span class="reply_day"><i class="bi bi-clock"></i>&nbsp;'
+            reply_html += writeDate
+            reply_html += '</span>'
+            //삭제버튼
+            if('{{user.username}}' == reply_all.replyData[i].user_id){
+              reply_html += '<a class="reply_btn reply_modifyBtn" onclick="reply_delete('+reply_all.replyData[i].id+')">삭제</a>'
+            }else if('{{user.username}}' == "admin"){
+              reply_html += '<a class="reply_btn reply_modifyBtn" onclick="reply_delete('+reply_all.replyData[i].id+')">삭제</a>'
+            }
+            //수정버튼
+            if('{{user.username}}' == reply_all.replyData[i].user_id){
+              reply_html += '<a class="reply_btn reply_deleteBtn" onclick="reply_modify('+reply_all.replyData[i].id+')">수정</a>'
+            }else if('{{user.username}}' == "admin"){
+              reply_html += '<a class="reply_btn reply_deleteBtn" onclick="reply_modify('+reply_all.replyData[i].id+')">수정</a>'
+            }
+            //
+            reply_html += "<br><div class='reply_content'>"+reply_all.replyData[i].content+"</div></div></div>"
+          }
+          $("#reply").html(reply_html)
+          reply_appearStart += reply_appearance
+        }
+      })
+  }
+
+  // 새로운 댓글 뒤에 추가 & table에 저장
+  function reply_add() {
+    dict_NewReply={}
+    dict_NewReply ["write_group"] = "{{list.id}}"
+    
+    if("{{user.id}}" == "None"){  //로그인 안되어있으면 none-user로 보냄
+      dict_NewReply ["user_id"]     = "non-user"
+      dict_NewReply ["write_id"]    = 20
+    }else{
+      dict_NewReply ["user_id"]     = "{{user.username}}"
+      dict_NewReply ["write_id"]    = "{{user.id}}"
+    }
+    dict_NewReply ["title"]       = "{{list.title}}"
+    // 참고 url ( https://velog.io/@gsuchoi/JavaScript-replace-%EB%B0%8F-%EC%A0%95%EA%B7%9C%EC%8B%9D )
+    dict_NewReply ["content"]     = $("#user_reply").val().replace("\n", "<br>")
+    $.ajax({
+      url: "{% url 'add_reply' %}",
+      type: "POST",
+      data: dict_NewReply,
+      headers: {'X-CSRFToken': csrftoken},
+      success: function (ReplyUser) {
+        if(ReplyUser.content == ""){
+          alert("내용을 입력하세요")
+        }
+        else{
+          alert("답글 달림")
+          let date = new Date(ReplyUser.userdate)
+          //writeDate = date.getFullYear()+"-"+(date.getMonth()+1)+"-"+date.getDate()+"  "+ date.getHours()+'시 '+ date.getMinutes()+'분'
+          writeDate = "방금 전"
+          let replyNew_html = ""
+          replyNew_html += "<div align='left'>"
+          replyNew_html += "<div class='reply"+ReplyUser.id+" reply_block' align='left'>"
+          if(ReplyUser.profile==""){
+            replyNew_html += "<img class='reply_profileImg' src='/static/image/DONOTDELETE_DY/profile.jpg'>"
+          }else{
+            replyNew_html += "<img class='reply_profileImg' src='/static/image/"+ReplyUser.profile+"'>"
+          }
+          replyNew_html += "<div class='reply_text'>&#32;<b class='reply_title'>"+ReplyUser.user_id+"</b>"
+          replyNew_html += '<span class="reply_day"><i class="bi bi-clock"></i>&nbsp;'
+          replyNew_html += writeDate
+          replyNew_html += '</span>'
+          //삭제버튼 : 안됨. ㅠㅠㅠ
+          reply_html += '<a class="reply_btn reply_modifyBtn" onclick="reply_delete('+ReplyUser.id+')">삭제</a>'
+          //수정버튼 : 안됨. ㅠㅠㅠ
+          reply_html += '<a class="reply_btn reply_deleteBtn" onclick="reply_modify('+ReplyUser.id+')">수정</a>'
+          //
+          replyNew_html += "<br><div class='reply_content'>"+ReplyUser.content+"</div></div></div>"
+          
+          $("#reply").prepend(replyNew_html)
+          $("#user_reply").val("")
+          var reply_cnt = parseInt($(".reply_cnt").text())
+          console.log(reply_cnt)
+          reply_cnt=reply_cnt+1
+          console.log(reply_cnt)
+          $(".reply_cnt").html(reply_cnt)
+        }
+      }
+    })
+  }
+
+  function reply_delete(targetID){    // 삭제할 댓글의 id가 들어옴
+    var reply_query = document.querySelector(".reply"+targetID)
+    $.ajax({
+      url: "{% url 'b_replyEdit' %}",
+      type: "get",
+      data: {"targetID" : targetID}, 
+      success: function(){
+        reply_query.parentNode.removeChild(reply_query)
+        var reply_cnt = parseInt($(".reply_cnt").text())
+        reply_cnt=reply_cnt-1          
+        $(".reply_cnt").html(reply_cnt)
+      },error: function(){
+        console.log("reply_delete 에러발생")
+      }
+    })
+  }
+
+  function reply_modify(targetID){    // 수정할 댓글의 id가 들어옴
+    let modify_box = ""
+    modify_box += '<div class="reply_modifyAction"><textarea id="user_reply" class="modifyBox" placeholder="수정할 내용 입력"></textarea>'
+    modify_box += '<button type="button" class="btn btn-primary" onclick="reply_modifyBtn('+targetID+')">수정</button></div>'
+    $(".reply"+targetID+" .reply_text").append(modify_box)
+  }
+
+  function reply_modifyBtn(targetID){
+    let reply_after = $(".reply"+targetID+" .modifyBox").val().replace("\n", "<br>")   // 수정내용
+    console.log("reply_after : ", reply_after)
+    // 만들었던 박스 삭제
+    var modifyBox_query = document.querySelector(".reply_modifyAction")
+    modifyBox_query.parentNode.removeChild(modifyBox_query)
+    // 수정된 내용 넣기
+    $(".reply"+targetID+" .reply_content").html(reply_after)
+    $.ajax({
+      url: "{% url 'b_replyEdit' %}",
+      type: "POST",
+      data: {"targetID" : targetID, "newContent": reply_after}, 
+      headers: {'X-CSRFToken': csrftoken},
+      success: function(){
+      },error: function(){
+        console.log("reply_delete 에러발생")
+      }
+    })
+  }
+
+</script>
+{% endblock section %}
+
+
+{% block aside %}
+<div class="aside">
+  <p style="text-align: left; margin-left: 20px;">
+    <b style="font-size: 15pt;">blog 리뷰</b>
+  </p>
+  <div class="blog">
+    <img src="https://i.pinimg.com/originals/c4/cb/9a/c4cb9abc7c69713e7e816e6a624ce7f8.gif" width="100%">
+    {# blog 태그 넣음 #}
+  </div>
+  <div class="blog_footer"></div>
+</div>
+
+<script>
+  // aside function
+  const blog_firstSight = 5  // 처음 표시할 blog 갯수
+  const blog_scrollNum = 2  // blog 스크롤 내릴때 마다 2개씩 뜨도록
+  let blog_scrollStart = blog_firstSight + 1
+  let blog_html = ""
+
+  // 처음에 표시하는 블로그링크
+  $(function(){
+    let title = $(".title").text()
+    // blog 크롤링 해오기(ajax, res, soup)
+    $.ajax({
+      url: "{% url 'blog_search' %}",
+      type: "GET",
+      data: {"title" : title},
+      success: function(blog){
+        for(i=0; i<blog_firstSight+1; i++){
+          //console.log(blog[i][0], blog[i][1], blog[i][2]) //title, href, src
+          blog_html += "<a href='"+blog[i][1]+"' class='blog_href'>"
+          blog_html += "<div class='blog_img' style='background-image: url(\""+blog[i][2]+"\");'>"
+          blog_html += "<div class='blog_img_opecity'></div></div>"
+          blog_html += "<div class='blog_title'>"+blog[i][0]+"</div>"
+          blog_html += "</a><br>"
+          $(".blog").html(blog_html)
+        }
+      }
+    })
+  })
+  
+  // 스크롤 하면 실행되는 함수
+  const scroll_criterion = 1
+  function blog_YesScroll(){
+    const myScreenHeight = screen.height  //내 모니터 크기
+    let oneTime = false //한번 스크롤에 한번만 로딩
+    document.addEventListener('scroll', blog_Scroll, {passive: true})
+    //console.log("oneTime : ", oneTime)
+    // 스크롤 하면 표시할 블로그 링크
+    function blog_Scroll(){
+      const asideContentQuery = document.querySelector(".aside")
+      const pageHeight = asideContentQuery.clientHeight //aside 클래스 전체 높이
+      const scrollPosition = pageYOffset  // 내가 위치한 페이지 y좌표
+/*
+      console.log("pageHeight : ", pageHeight)
+      console.log("myScreenHeight : ", myScreenHeight)
+      console.log("pageHeight-myScreenHeight/2 : ", pageHeight-myScreenHeight/scroll_criterion)
+      console.log("scrollPosition : ", scrollPosition)
+      console.log("==================")
+*/
+      if(pageHeight-myScreenHeight/scroll_criterion < scrollPosition && !oneTime){
+        oneTime = true
+        let title = $(".title").text()
+        // blog 크롤링 해오기(ajax, res, soup)
+        $.ajax({
+          url: "{% url 'blog_search' %}",
+          type: "GET",
+          data: {"title" : title},
+          success: function(blog){
+            let blog_endMsg = "더보려면 스크롤"
+            //console.log("blog_scrollStart : ", blog_scrollStart)
+            if(blog_scrollStart+blog_scrollNum < blog.length){
+              blog_scrollEnd = blog_scrollStart+blog_scrollNum
+              //console.log("----1 if : ", blog_scrollStart+blog_scrollNum, "/", blog.length)
+            }else{
+              blog_scrollEnd = blog.length
+              blog_endMsg = "리뷰 끝"
+              //console.log("----2 if : ", blog_scrollStart+blog_scrollNum, "/", blog.length)
+
+            }
+            for(i=blog_scrollStart; i<blog_scrollEnd; i++){
+              //console.log(blog[i][0], blog[i][1], blog[i][2]) //title, href, src
+              //console.log("===================================", blog_scrollEnd)
+              blog_html += "<a href='"+blog[i][1]+"' class='blog_href'>"
+              blog_html += "<div class='blog_img' style='background-image: url(\""+blog[i][2]+"\");'>"
+              blog_html += "<div class='blog_img_opecity'></div></div>"
+              blog_html += "<div class='blog_title'>"+i+blog[i][0]+"</div>"
+              blog_html += "</a><br>"
+
+            }
+            $(".blog").html(blog_html)
+            $(".blog_footer").html(blog_endMsg)
+/*
+            console.log("pageHeight : ", pageHeight)
+            console.log("myScreenHeight : ", myScreenHeight)
+            console.log("pageHeight-myScreenHeight : ", pageHeight-myScreenHeight)
+            console.log("scrollPosition : ", scrollPosition)
+            console.log("==================")
+*/
+            blog_scrollStart += blog_scrollNum
+            oneTime = false
+            //console.log("====blog_scrollStart : ", blog_scrollStart)
+          }
+        })
+        
+        //console.log("======oneTime : ", oneTime)
+      }
+    }
+
+  }
+blog_YesScroll()
+</script>
+
+{% endblock aside %}
