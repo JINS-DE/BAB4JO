@@ -19,4 +19,10 @@
 - 데이터베이스 : db.sqlite3<br>
 - 나의 기여도 : 프론트엔드 20%, 백엔드 60~70%<br>
 
+# 3. 담당 역할
+- 데이터 모델링
+- 게시판 CRUD 기능 구현
+- 좋아요, 조회수, 검색 기능 구현
+- 게시글 페이징 처리 구현
+
 <Br>![image](https://github.com/user-attachments/assets/3d2a71f4-f89a-4672-9958-5e7348c1653d)<br><Br>
