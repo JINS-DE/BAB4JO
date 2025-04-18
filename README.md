@@ -19,6 +19,10 @@
 - 데이터베이스 : db.sqlite3<br>
 - 나의 기여도 : 프론트엔드 20%, 백엔드 60~70%<br>
 
+## ERD
+![image](https://github.com/user-attachments/assets/0d818910-1ccd-462f-b5f7-a23a02533efc)
+
+
 # 3. 담당 역할
 - 데이터 모델링
 - 게시판 CRUD 기능 구현
